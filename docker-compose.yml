@@ -3,10 +3,12 @@ version: '3.9'
 services:
   # PHP Apache service
   php-apache:
-    build:
+    image: php:8.1-apache
+    container_name: php-apache
+    #build:
       # the Dockerfile path
-      context: .
-      dockerfile: Dockerfile
+      #context: .
+      #dockerfile: Dockerfile
     # Mount the local ./app directory to /var/www/html in the container
     volumes:
       - ./app:/var/www/html 
@@ -15,6 +17,18 @@ services:
     # Define a dependency on the mongodb service
     depends_on:
       - mongodb
+    command: /bin/bash -c "
+      apt-get update &&
+      apt-get install -y libpng-dev libjpeg-dev git unzip libcurl4-openssl-dev pkg-config libssl-dev &&
+      docker-php-ext-configure gd --with-jpeg &&
+      docker-php-ext-install gd &&
+      pecl install mongodb &&
+      docker-php-ext-enable mongodb &&
+      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+      composer require mongodb/mongodb &&
+      apache2-foreground"
+    networks:
+      - mynetwork
 
   # MongoDB service
   mongodb:
