@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  # PHP Apache service
+  php-apache:
+    build:
+      # the Dockerfile path
+      context: .
+      dockerfile: Dockerfile
+    # Mount the local ./app directory to /var/www/html in the container
+    volumes:
+      - ./app:/var/www/html 
+    ports:
+      - 8000:80  
+    # Define a dependency on the mongodb service
+    depends_on:
+      - mongodb
+
+  # MongoDB service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      # MongoDB authentication credentials
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: pass
+    volumes:
+      # Mount local directories for MongoDB data persistence
+      - ./db_data/:/data/db/
+      - mongodb-data:/data/db
+    networks:
+      - mynetwork
+
+  # MongoDB Express service
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      # MongoDB Express configuration
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: pass
+      ME_CONFIG_MONGODB_URL: mongodb://admin:pass@mongodb:27017/
+    networks:
+      - mynetwork
+
+# volumes for MongoDB data persistence
+volumes:
+  mongodb-data:
+  db_data:
+
+# custom network for communication between services
+networks:
+  mynetwork:
